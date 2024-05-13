@@ -48,20 +48,36 @@ func (api *ApiHandler) getReadyStatus(c echo.Context) error {
 }
 
 func (api *ApiHandler) login(c echo.Context) error {
-	username := c.FormValue("username")
-	password := c.FormValue("password")
 
-	// Throws unauthorized error
-	if username != "jon" || password != "shhh!" {
-		return echo.ErrUnauthorized
+	l := logger.WithField("request", "login")
+
+	u := new(UserConnectionRequest)
+	if err := c.Bind(u); err != nil {
+		FailOnError(l, err, "Body param failed")
+	}
+	if err := c.Validate(u); err != nil {
+		return err
 	}
 
+	user, err := db.GetUsername(api.pg, u.Username)
+
+	if err != nil {
+		return NewInternalServerError(err)
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(u.Password))
+
+	if err != nil {
+		return NewNotFoundError(err)
+	}
+
+	expirationDate := time.Now().Add(time.Hour * 72)
 	// Set custom claims
 	claims := &jwtCustomClaims{
-		"Jon Snow",
-		true,
+		user.Username,
+		user.ID,
 		jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 72)),
+			ExpiresAt: jwt.NewNumericDate(expirationDate),
 		},
 	}
 
@@ -74,6 +90,13 @@ func (api *ApiHandler) login(c echo.Context) error {
 		return err
 	}
 
+	tokenDb := db.Token{
+		Value:          t,
+		ExpirationDate: expirationDate,
+	}
+	//Insert the new token in the DB
+	db.UpsertToken(api.pg, tokenDb)
+
 	return c.JSON(http.StatusOK, echo.Map{
 		"token": t,
 	})
@@ -82,7 +105,7 @@ func (api *ApiHandler) login(c echo.Context) error {
 func (api *ApiHandler) restricted(c echo.Context) error {
 	user := c.Get("user").(*jwt.Token)
 	claims := user.Claims.(*jwtCustomClaims)
-	name := claims.Name
+	name := claims.Username
 	return c.String(http.StatusOK, "Welcome "+name+"!")
 }
 
@@ -105,6 +128,7 @@ func (api *ApiHandler) signup(c echo.Context) error {
 
 	user := db.User{
 		Email:     u.Email,
+		Username:  u.Username,
 		FirstName: u.FirstName,
 		LastName:  u.FirstName,
 		Password:  string(hashedPassword[:]),

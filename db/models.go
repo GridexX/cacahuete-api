@@ -34,4 +34,5 @@ type Token struct {
 	ID             uint `gorm:"primaryKey;autoIncrement:true;uniqueIndex;not null"`
 	Value          string
 	ExpirationDate time.Time
+	UserID         uint
 }

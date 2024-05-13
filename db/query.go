@@ -25,3 +25,18 @@ func CreateUser(db *gorm.DB, user User) (*User, error) {
 	err := LogAndReturnError(loger, result, "create", "user")
 	return &user, err
 }
+
+func GetUsername(db *gorm.DB, username string) (*User, error) {
+	user := new(User)
+	result := db.Where("username = ?", username).First(user)
+	err := LogAndReturnError(loger, result, "get", "username")
+	return user, err
+}
+
+func UpsertToken(db *gorm.DB, token Token) (*Token, error) {
+
+	tokenR := new(Token)
+	result := db.Where("user_id = ?", token.UserID).Assign(Token{Value: token.Value, ExpirationDate: token.ExpirationDate}).FirstOrCreate(tokenR)
+	err := LogAndReturnError(loger, result, "upsert", "token")
+	return tokenR, err
+}

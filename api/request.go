@@ -10,3 +10,8 @@ type UserCreationRequest struct {
 	// PostalCode string `json:"postalCode"`
 	// City       string `j`
 }
+
+type UserConnectionRequest struct {
+	Username string `json:"username" validate:"required"`
+	Password string `json:"password" validate:"required"`
+}

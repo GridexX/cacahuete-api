@@ -19,10 +19,18 @@ func main() {
 
 	conf := configuration.New()
 
+	pg, err := db.New(conf)
+
+	if err != nil {
+		return
+	}
+
+	err = db.AutoMigrate(pg)
+
 	val := validation.New(conf)
 	r := api.New(val)
 	v1 := r.Group(conf.ListenRoute)
-	pg, err := db.New(conf)
+
 	if err != nil {
 		return
 	}

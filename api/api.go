@@ -31,6 +31,7 @@ func (api *ApiHandler) Register(v1 *echo.Group, conf *configuration.Configuratio
 
 	app := v1.Group("/api")
 	app.POST("/login", api.login)
+	app.POST("/signup", api.signup)
 	config := echojwt.Config{
 		NewClaimsFunc: func(c echo.Context) jwt.Claims {
 			return new(jwtCustomClaims)
@@ -40,4 +41,5 @@ func (api *ApiHandler) Register(v1 *echo.Group, conf *configuration.Configuratio
 	app.Use(echojwt.WithConfig(config))
 	app.GET("", api.restricted)
 	app.GET("/restricted", api.restricted)
+
 }

@@ -1,12 +1,15 @@
 package api
 
 import (
+	"cacahuete-api/db"
+	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
+	"golang.org/x/crypto/bcrypt"
 )
 
 var logger = logrus.WithField("context", "api/routes")
@@ -81,4 +84,32 @@ func (api *ApiHandler) restricted(c echo.Context) error {
 	claims := user.Claims.(*jwtCustomClaims)
 	name := claims.Name
 	return c.String(http.StatusOK, "Welcome "+name+"!")
+}
+
+func (api *ApiHandler) signup(c echo.Context) error {
+	l := logger.WithField("request", "sign-up")
+
+	u := new(UserCreationRequest)
+	if err := c.Bind(u); err != nil {
+		FailOnError(l, err, "Body param failed")
+	}
+	if err := c.Validate(u); err != nil {
+		return err
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(u.Password), bcrypt.DefaultCost)
+	if err != nil {
+		fmt.Println("Error during hash generation:", err)
+		return err
+	}
+
+	user := db.User{
+		Email:     u.Email,
+		FirstName: u.FirstName,
+		LastName:  u.FirstName,
+		Password:  string(hashedPassword[:]),
+	}
+
+	db.CreateUser(api.pg, user)
+	return c.NoContent(http.StatusCreated)
 }

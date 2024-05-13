@@ -33,3 +33,17 @@ func New(conf *configuration.Configuration) (*gorm.DB, error) {
 	return db, nil
 
 }
+
+func AutoMigrate(db *gorm.DB) error {
+
+	err := db.AutoMigrate(
+		&User{},
+		&Journey{},
+		&Station{},
+		&Token{},
+	)
+	if err != nil {
+		logrus.Fatal(err)
+	}
+	return nil
+}

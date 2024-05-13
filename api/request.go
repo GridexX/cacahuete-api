@@ -1,5 +1,13 @@
 package api
 
+import "github.com/golang-jwt/jwt/v5"
+
+type jwtCustomClaims struct {
+	Username string `json:"username"`
+	UserID   uint   `json:"userId"`
+	jwt.RegisteredClaims
+}
+
 type UserCreationRequest struct {
 	Email     string `json:"email" validate:"required"`
 	Username  string `json:"username" validate:"required,min=4"`

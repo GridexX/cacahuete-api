@@ -43,6 +43,16 @@ func NewNotFoundError(err error) error {
 	return echo.NewHTTPError(http.StatusNotFound, jsonError)
 }
 
+func NewUnauthorizedError(err error) error {
+	jsonError := EchoError{
+		Code:     http.StatusUnauthorized,
+		Message:  "Unauthorized Error",
+		Error:    err.Error(),
+		IssuedAt: time.Now(),
+	}
+	return echo.NewHTTPError(http.StatusNotFound, jsonError)
+}
+
 func NewBadRequestError(err error) error {
 	jsonError := EchoError{
 		Code:     http.StatusBadRequest,

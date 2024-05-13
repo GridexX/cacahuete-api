@@ -93,6 +93,7 @@ func (api *ApiHandler) login(c echo.Context) error {
 	tokenDb := db.Token{
 		Value:          t,
 		ExpirationDate: expirationDate,
+		UserID:         user.ID,
 	}
 	//Insert the new token in the DB
 	db.UpsertToken(api.pg, tokenDb)
@@ -102,10 +103,29 @@ func (api *ApiHandler) login(c echo.Context) error {
 	})
 }
 
+func (api *ApiHandler) logout(c echo.Context) error {
+	user := c.Get("user").(*jwt.Token)
+	claims := user.Claims.(*jwtCustomClaims)
+	userID := claims.UserID
+	logger.Info(userID)
+	if err := db.DeleteToken(api.pg, userID); err != nil {
+		return NewInternalServerError(err)
+	}
+	return c.NoContent(http.StatusNoContent)
+}
+
 func (api *ApiHandler) restricted(c echo.Context) error {
 	user := c.Get("user").(*jwt.Token)
 	claims := user.Claims.(*jwtCustomClaims)
 	name := claims.Username
+
+	t, err := db.GetTokenUser(api.pg, claims.UserID)
+	if err != nil {
+		return NewUnauthorizedError(err)
+	}
+	if t == nil {
+		return NewUnauthorizedError(err)
+	}
 	return c.String(http.StatusOK, "Welcome "+name+"!")
 }
 

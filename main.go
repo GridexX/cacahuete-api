@@ -28,6 +28,6 @@ func main() {
 	}
 	h := api.NewApiHandler(pg, conf)
 
-	h.Register(v1)
+	h.Register(v1, conf)
 	r.Logger.Fatal(r.Start(fmt.Sprintf("%v:%v", conf.ListenAddress, conf.ListenPort)))
 }

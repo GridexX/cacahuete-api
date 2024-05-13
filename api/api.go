@@ -3,6 +3,8 @@ package api
 import (
 	"cacahuete-api/configuration"
 
+	"github.com/golang-jwt/jwt/v5"
+	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
 	"gorm.io/gorm"
 )
@@ -20,11 +22,22 @@ func NewApiHandler(db *gorm.DB, conf *configuration.Configuration) *ApiHandler {
 	return &handler
 }
 
-func (api *ApiHandler) Register(v1 *echo.Group) {
+func (api *ApiHandler) Register(v1 *echo.Group, conf *configuration.Configuration) {
 
 	health := v1.Group("/health")
 	health.GET("/alive", api.getAliveStatus)
 	health.GET("/live", api.getAliveStatus)
 	health.GET("/ready", api.getReadyStatus)
 
+	app := v1.Group("/api")
+	app.POST("/login", api.login)
+	config := echojwt.Config{
+		NewClaimsFunc: func(c echo.Context) jwt.Claims {
+			return new(jwtCustomClaims)
+		},
+		SigningKey: []byte(conf.JWTSecret),
+	}
+	app.Use(echojwt.WithConfig(config))
+	app.GET("", api.restricted)
+	app.GET("/restricted", api.restricted)
 }

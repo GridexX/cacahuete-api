@@ -33,6 +33,16 @@ func NewInternalServerError(err error) error {
 	return echo.NewHTTPError(http.StatusInternalServerError, jsonError)
 }
 
+func NewConflictError(err error) error {
+	jsonError := EchoError{
+		Code:     http.StatusConflict,
+		Message:  "Conflict Error",
+		Error:    err.Error(),
+		IssuedAt: time.Now(),
+	}
+	return echo.NewHTTPError(http.StatusConflict, jsonError)
+}
+
 func NewNotFoundError(err error) error {
 	jsonError := EchoError{
 		Code:     http.StatusNotFound,
@@ -50,7 +60,7 @@ func NewUnauthorizedError(err error) error {
 		Error:    err.Error(),
 		IssuedAt: time.Now(),
 	}
-	return echo.NewHTTPError(http.StatusNotFound, jsonError)
+	return echo.NewHTTPError(http.StatusUnauthorized, jsonError)
 }
 
 func NewBadRequestError(err error) error {

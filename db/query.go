@@ -21,6 +21,11 @@ func CreateUser(db *gorm.DB, user User) (*User, error) {
 
 	// TODO Here we need to test if the user was already created
 	result := db.Where("username = ? OR email = ?", user.FirstName, user.Email).FirstOrCreate(&user)
+	loger.Info(result.RowsAffected)
+	// User already exists so we throw an error
+	if result.RowsAffected == 0 {
+		return nil, gorm.ErrDuplicatedKey
+	}
 	db.Create(&user)
 	err := LogAndReturnError(loger, result, "create", "user")
 	return &user, err
@@ -43,9 +48,9 @@ func UpsertToken(db *gorm.DB, token Token) (*Token, error) {
 	return &tokenR, err
 }
 
-func GetTokenUser(db *gorm.DB, userID uint) (*Token, error) {
+func GetTokenUser(db *gorm.DB, raw string, userID uint) (*Token, error) {
 	tokenR := new(Token)
-	result := db.Where("user_id = ?", userID).First(tokenR)
+	result := db.Where("user_id = ? and value = ?", userID, raw).First(tokenR)
 	err := LogAndReturnError(loger, result, "get", "token username")
 	return tokenR, err
 }

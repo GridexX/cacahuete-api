@@ -115,18 +115,11 @@ func (api *ApiHandler) logout(c echo.Context) error {
 }
 
 func (api *ApiHandler) restricted(c echo.Context) error {
+	// claims := c.Get("user").(*jwtCustomClaims)
 	user := c.Get("user").(*jwt.Token)
-	claims := user.Claims.(*jwtCustomClaims)
-	name := claims.Username
+	// name := claims.Username
 
-	t, err := db.GetTokenUser(api.pg, claims.UserID)
-	if err != nil {
-		return NewUnauthorizedError(err)
-	}
-	if t == nil {
-		return NewUnauthorizedError(err)
-	}
-	return c.String(http.StatusOK, "Welcome "+name+"!")
+	return c.String(http.StatusOK, "Welcome "+user.Raw+"!")
 }
 
 func (api *ApiHandler) signup(c echo.Context) error {
@@ -154,6 +147,9 @@ func (api *ApiHandler) signup(c echo.Context) error {
 		Password:  string(hashedPassword[:]),
 	}
 
-	db.CreateUser(api.pg, user)
+	_, err = db.CreateUser(api.pg, user)
+	if err != nil {
+		return NewConflictError(err)
+	}
 	return c.NoContent(http.StatusCreated)
 }

@@ -10,9 +10,9 @@ type Journey struct {
 }
 
 type User struct {
-	ID         uint `gorm:"primaryKey;autoIncrement:true;uniqueIndex;not null"`
-	Email      string
-	Username   string
+	ID         uint   `gorm:"primaryKey;autoIncrement:true;uniqueIndex;not null"`
+	Email      string `gorm:"unique"`
+	Username   string `gorm:"unique"`
 	Password   string
 	FirstName  string
 	LastName   string

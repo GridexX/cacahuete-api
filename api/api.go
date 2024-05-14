@@ -41,7 +41,6 @@ func (api *ApiHandler) Register(v1 *echo.Group, conf *configuration.Configuratio
 	}
 	app.Use(echojwt.WithConfig(config))
 	app.POST("/logout", api.logout)
-	app.GET("", api.restricted)
-	app.GET("/restricted", api.restricted)
+	app.GET("/restricted", api.extractUser(api.restricted))
 
 }
